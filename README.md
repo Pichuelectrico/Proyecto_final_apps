@@ -1,58 +1,109 @@
-# flutter_bdd_firebase_ejm4
+# proyecto_final_apps (VibeShare)
 
-Aplicación Flutter que permite gestionar usuarios, utilizando Firebase Firestore como base de datos y siguiendo una arquitectura limpia (Clean Architecture / Domain-Driven Design).
+Aplicación Flutter para compartir imágenes entre amigos, utilizando Firebase para autenticación y datos, Imgur para almacenamiento de imágenes, y Riverpod para gestión de estado.
 
 ## Características
 
-- **Ver usuarios**: Muestra una lista de todos los usuarios almacenados en Firestore, ordenados alfabéticamente por nombre.
-- **Agregar usuarios**: Botón flotante para agregar nuevos usuarios mediante un formulario.
-- **Persistencia en la nube**: Los datos se almacenan en Firebase Firestore.
+- **Autenticación**: Registro e inicio de sesión con email/password (Firebase Auth)
+- **Compartir imágenes**: Selecciona fotos de galería y envíalas a amigos
+- **Feed de imágenes**: Ver imágenes recibidas de amigos
+- **Galería personal**: Historial de imágenes enviadas
+- **Perfil**: Información del usuario actual
+- **Selección de amigos**: Elegir a quién enviar la imagen
+- **Diseño friendly**: Tema gris/azul/verde con bordes redondeados
 
 ## Estructura del Proyecto
 
 ```
 lib/
-├── main.dart                           # Punto de entrada de la app
-├── modelos/
-│   └── usuario_modelo.dart             # Modelo de datos del usuario
-├── dominio/
-│   └── repositorio_usuario.dart        # Interfaz del repositorio (contrato)
-├── data/
-│   ├── firebase_fuente_datos_usuario.dart  # Fuente de datos Firestore
-│   └── repositorio_usuario_impl.dart        # Implementación del repositorio
-├── usecases/
-│   ├── obtener_usuarios.dart           # Caso de uso: obtener usuarios
-│   └── agregar_usuario.dart            # Caso de uso: agregar usuario
-└── presentacion/
-    ├── pagina_principal.dart           # Página principal con lista de usuarios
-    └── widget_usuario.dart             # Widget para mostrar cada usuario
+├── main.dart                           # Punto de entrada con Riverpod
+├── core/
+│   └── constants.dart                  # Constantes de diseño y colores
+├── modelos/                            # Entidades del dominio
+│   ├── usuario.dart
+│   ├── imagen.dart
+│   └── friend.dart
+├── dominio/                            # Contratos e interfaces
+│   ├── repositorios/
+│   │   ├── auth_repo.dart
+│   │   ├── user_repo.dart
+│   │   └── image_repo.dart
+│   └── casos_uso/
+│       ├── iniciar_sesion.dart
+│       ├── registrar_usuario.dart
+│       ├── cargar_imagen.dart
+│       └── validar_imagen.dart         # Scaffold para IA NSFW
+├── data/                               # Implementaciones concretas
+│   ├── firebase/
+│   │   ├── auth_servicio.dart          # Firebase Auth
+│   │   └── firestore_servicio.dart     # Firestore DB
+│   ├── imgur/
+│   │   └── imgur_servicio.dart         # Imgur API (imágenes)
+│   └── repositorios/
+│       ├── auth_repo_impl.dart
+│       ├── user_repo_impl.dart
+│       └── image_repo_impl.dart
+├── presentacion/                       # UI y Estado
+│   ├── vistas/
+│   │   ├── login_page.dart             # Login/Registro
+│   │   ├── home_page.dart              # Feed de recibidas
+│   │   ├── gallery_page.dart           # Imágenes enviadas
+│   │   ├── profile_page.dart           # Perfil usuario
+│   │   └── home_shell.dart             # Shell con navegación
+│   ├── widgets/
+│   │   ├── custom_button.dart
+│   │   ├── image_card.dart
+│   │   └── friend_selector.dart
+│   └── providers/
+│       ├── auth_provider.dart          # Estado Auth (Riverpod)
+│       ├── image_provider.dart         # Estado Imágenes (Riverpod)
+│       └── friends_provider.dart       # Estado Amigos (Riverpod)
+└── utils/
+    ├── validators.dart
+    └── helpers.dart
 ```
 
 ## Arquitectura
 
-La app sigue los principios de **Clean Architecture** con las siguientes capas:
+La app sigue **Clean Architecture** con separación de capas:
 
-1. **Modelo (Modelos)**: Representación de los datos - `Usuario` con campos `id`, `nombre`, `correo`
-2. **Dominio (Dominio)**: Define el contrato del repositorio - `RepositorioUsuario`
-3. **Data (Data)**: Implementación concreta - `RepositorioUsuarioImpl` y `FuenteDatosUsuarioFirebase`
-4. **Casos de Uso (Usecases)**: Lógica de negocio - `ObtenerUsuarios`, `AgregarUsuario`
-5. **Presentación (Presentacion)**: Interfaz de usuario - `PaginaPrincipal`, `WidgetUsuario`
+1. **Modelos**: Entidades puras (Usuario, Imagen, Friend)
+2. **Dominio**: Contratos de repositorios y casos de uso
+3. **Data**: Implementaciones (Firebase, Imgur)
+4. **Presentación**: UI + Providers Riverpod
 
-## Requisitos
+## Tecnologías
 
-- Flutter SDK
-- Firebase Core (`firebase_core`)
-- Cloud Firestore (`cloud_firestore`)
+| Categoría | Tecnología |
+|-----------|-------------|
+| Frontend | Flutter + Dart |
+| Estado | Riverpod |
+| Auth | Firebase Authentication |
+| Base de datos | Cloud Firestore |
+| Almacenamiento imágenes | Imgur API |
+| Selector imágenes | image_picker |
 
-## Configuración
+## Configuración Firebase
 
-1. Crear un proyecto en Firebase Console
-2. Habilitar Firestore Database
-3. Agregar el archivo `google-services.json` (Android) o configurar via Firebase CLI
-4. Ejecutar `flutter pub get`
+1. Crear proyecto en Firebase Console
+2. **Authentication**: Habilitar Email/Password
+3. **Firestore**: Crear base de datos (colecciones: users, friends, images)
+4. Agregar `google-services.json` (Android)
+5. Ejecutar `flutter pub get`
 
-## Getting Started
+## Configuración Imgur
+
+El código usa Client-ID público de Imgur. Para mayor límite, obtener uno propio en https://api.imgur.com/oauth2/addclient
+
+## Ejecutar
 
 ```bash
+flutter pub get
 flutter run
 ```
+
+## Notas
+
+- El caso de uso `ValidarImagen` está preparado para integrar validación NSFW via API
+- Las imágenes se suben a Imgur (gratis) y los metadatos se guardan en Firestore
+- No se usa Firebase Storage (para evitar costos)
