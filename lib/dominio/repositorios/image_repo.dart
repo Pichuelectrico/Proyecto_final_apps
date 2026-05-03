@@ -9,4 +9,5 @@ abstract class ImageRepo {
     required String localPath,
     String? caption,
   });
+  Future<void> cacheLatestImage(Imagen imagen, {String? senderName});
 }

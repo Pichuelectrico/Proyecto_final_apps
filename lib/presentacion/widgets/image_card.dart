@@ -6,8 +6,9 @@ import '../../modelos/imagen.dart';
 
 class ImageCard extends StatelessWidget {
   final Imagen imagen;
+  final Widget? footer;
 
-  const ImageCard({super.key, required this.imagen});
+  const ImageCard({super.key, required this.imagen, this.footer});
 
   @override
   Widget build(BuildContext context) {
@@ -40,10 +41,11 @@ class ImageCard extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.all(14),
-              child: Text(
-                imagen.caption ?? 'VibeShare',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              child: footer ??
+                  Text(
+                    imagen.caption ?? 'VibeShare',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
             ),
           ],
         ),

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../data/firebase/firestore_servicio.dart';
 import '../../data/imgur/imgur_servicio.dart';
+import '../../data/openai/openai_servicio.dart';
 import '../../data/repositorios/image_repo_impl.dart';
 import '../../dominio/repositorios/image_repo.dart';
 import '../../modelos/imagen.dart';
@@ -14,6 +15,10 @@ final firestoreServicioProvider = Provider<FirestoreServicio>((ref) {
 
 final imgurServicioProvider = Provider<ImgurServicio>((ref) {
   return ImgurServicio();
+});
+
+final openAiServicioProvider = Provider<OpenAIServicio>((ref) {
+  return OpenAIServicio();
 });
 
 final imagePickerProvider = Provider<ImagePicker>((ref) {

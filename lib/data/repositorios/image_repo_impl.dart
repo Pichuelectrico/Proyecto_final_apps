@@ -71,4 +71,16 @@ class ImageRepoImpl implements ImageRepo {
       isApproved: true,
     );
   }
+
+  Future<void> cacheLatestImage(Imagen imagen, {String? senderName}) async {
+    try {
+      await imgur.cacheImageToWidget(
+        imageUrl: imagen.imageUrl,
+        caption: imagen.caption,
+        senderId: imagen.senderId,
+        senderName: senderName,
+      );
+    } catch (_) {}
+  }
+
 }

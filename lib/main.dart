@@ -33,7 +33,7 @@ class VibeShareApp extends ConsumerWidget {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(kCornerRadiusLg),
         ),

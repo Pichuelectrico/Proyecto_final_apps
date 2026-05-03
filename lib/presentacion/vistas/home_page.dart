@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants.dart';
 import '../providers/auth_provider.dart';
+import '../providers/friends_provider.dart';
 import '../providers/image_provider.dart';
 import '../widgets/image_card.dart';
 
@@ -18,6 +19,7 @@ class HomePage extends ConsumerWidget {
         if (user == null) {
           return const SizedBox.shrink();
         }
+        final friendsAsync = ref.watch(friendsProvider(user.id));
         final imagesAsync = ref.watch(incomingImagesProvider(user.id));
         return Scaffold(
           backgroundColor: kBackgroundGrey,
@@ -34,6 +36,21 @@ class HomePage extends ConsumerWidget {
           ),
           body: imagesAsync.when(
             data: (images) {
+              if (images.isNotEmpty) {
+                final latest = images.first;
+                final friends = friendsAsync.value ?? const [];
+                String? senderName;
+                for (final friend in friends) {
+                  if (friend.id == latest.senderId) {
+                    senderName = friend.nombre;
+                    break;
+                  }
+                }
+                ref.read(imageRepoProvider).cacheLatestImage(
+                      latest,
+                      senderName: senderName,
+                    );
+              }
               if (images.isEmpty) {
                 return Center(
                   child: Text(

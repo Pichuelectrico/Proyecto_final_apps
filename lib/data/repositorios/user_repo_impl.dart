@@ -38,4 +38,22 @@ class UserRepoImpl implements UserRepo {
       );
     }).toList();
   }
+
+  @override
+  Future<void> addFriend({
+    required String ownerId,
+    required String friendId,
+    String? nombre,
+    String? email,
+    String? avatarUrl,
+  }) async {
+    await servicio.friendsRef.add({
+      'ownerId': ownerId,
+      'friendId': friendId,
+      'nombre': nombre,
+      'email': email,
+      'avatarUrl': avatarUrl,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
 }
