@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:image_picker/image_picker.dart';
+
 import '../../data/firebase/firestore_servicio.dart';
 import '../../data/imgur/imgur_servicio.dart';
 import '../../data/repositorios/image_repo_impl.dart';
@@ -12,6 +14,10 @@ final firestoreServicioProvider = Provider<FirestoreServicio>((ref) {
 
 final imgurServicioProvider = Provider<ImgurServicio>((ref) {
   return ImgurServicio();
+});
+
+final imagePickerProvider = Provider<ImagePicker>((ref) {
+  return ImagePicker();
 });
 
 final imageRepoProvider = Provider<ImageRepo>((ref) {

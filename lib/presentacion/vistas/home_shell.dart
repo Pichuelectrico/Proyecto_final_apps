@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants.dart';
+import '../../dominio/casos_uso/cargar_imagen.dart';
+import '../../dominio/casos_uso/validar_imagen.dart';
 import '../providers/auth_provider.dart';
 import '../providers/friends_provider.dart';
 import '../providers/image_provider.dart';
@@ -94,6 +97,9 @@ class _ShareSheet extends ConsumerStatefulWidget {
 class _ShareSheetState extends ConsumerState<_ShareSheet> {
   final _captionController = TextEditingController();
   String? _selectedImagePath;
+  Friend? _selectedFriend;
+  bool _isSubmitting = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -114,11 +120,20 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
               child: Center(child: Text('Agrega amigos para compartir.')),
             );
           }
-          var selected = friends.first;
+          _selectedFriend ??= friends.first;
+          final selected = _selectedFriend;
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    _errorMessage!,
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                ),
               Text(
                 'Comparte una imagen',
                 style: Theme.of(context).textTheme.titleLarge,
@@ -127,7 +142,7 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
               FriendSelector(
                 friends: friends,
                 selected: selected,
-                onSelected: (friend) => setState(() => selected = friend),
+                onSelected: (friend) => setState(() => _selectedFriend = friend),
               ),
               const SizedBox(height: 16),
               Container(
@@ -157,9 +172,41 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
                     Row(
                       children: [
                         ElevatedButton.icon(
-                          onPressed: () {
-                            setState(() => _selectedImagePath = '');
-                          },
+                          onPressed: _isSubmitting
+                              ? null
+                              : () async {
+                                  setState(() => _errorMessage = null);
+                                  final picker = ref.read(imagePickerProvider);
+                                  final source = await showModalBottomSheet<ImageSource>(
+                                    context: context,
+                                    builder: (context) => SafeArea(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ListTile(
+                                            leading: const Icon(Icons.photo_library),
+                                            title: const Text('Galeria'),
+                                            onTap: () => Navigator.of(context)
+                                                .pop(ImageSource.gallery),
+                                          ),
+                                          ListTile(
+                                            leading: const Icon(Icons.photo_camera),
+                                            title: const Text('Camara'),
+                                            onTap: () => Navigator.of(context)
+                                                .pop(ImageSource.camera),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                  if (source == null) return;
+                                  final picked = await picker.pickImage(
+                                    source: source,
+                                    imageQuality: 85,
+                                  );
+                                  if (picked == null) return;
+                                  setState(() => _selectedImagePath = picked.path);
+                                },
                           icon: const Icon(Icons.photo_library),
                           label: const Text('Seleccionar'),
                         ),
@@ -182,8 +229,58 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
                           backgroundColor: kSecondaryGreen,
                           foregroundColor: Colors.white,
                         ),
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Enviar vibe'),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () async {
+                                setState(() => _errorMessage = null);
+                                final selected = _selectedFriend;
+                                final imagePath = _selectedImagePath;
+                                if (selected == null) {
+                                  setState(() => _errorMessage = 'Selecciona un amigo.');
+                                  return;
+                                }
+                                if (imagePath == null || imagePath.isEmpty) {
+                                  setState(() => _errorMessage = 'Selecciona una imagen.');
+                                  return;
+                                }
+                                final isValid =
+                                    await ValidarImagen().ejecutar(imagePath);
+                                if (!isValid) {
+                                  setState(() => _errorMessage = 'Imagen no valida.');
+                                  return;
+                                }
+                                setState(() => _isSubmitting = true);
+                                try {
+                                  final repo = ref.read(imageRepoProvider);
+                                  final useCase = CargarImagen(repo);
+                                  await useCase.ejecutar(
+                                    senderId: widget.userId,
+                                    receiverId: selected.id,
+                                    localPath: imagePath,
+                                    caption: _captionController.text.trim().isEmpty
+                                        ? null
+                                        : _captionController.text.trim(),
+                                  );
+                                  if (!mounted) return;
+                                  Navigator.of(context).pop();
+                                } catch (error) {
+                                  setState(() => _errorMessage = '$error');
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => _isSubmitting = false);
+                                  }
+                                }
+                              },
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Enviar vibe'),
                       ),
                     ),
                   ],
