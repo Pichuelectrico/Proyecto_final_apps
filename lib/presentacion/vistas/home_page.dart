@@ -2,15 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants.dart';
+import '../../data/widget/home_widget_servicio.dart';
 import '../providers/auth_provider.dart';
 import '../providers/image_provider.dart';
-import '../widgets/image_card.dart';
+import '../widgets/image_card_with_sender.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  final _widgetService = HomeWidgetServicio();
+
+  @override
+  void initState() {
+    super.initState();
+    _widgetService.inicializar();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
 
     return authState.when(
@@ -26,14 +40,17 @@ class HomePage extends ConsumerWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.logout),
-                onPressed: () => ref
-                    .read(authControllerProvider.notifier)
-                    .logout(),
+                onPressed: () =>
+                    ref.read(authControllerProvider.notifier).logout(),
               ),
             ],
           ),
           body: imagesAsync.when(
             data: (images) {
+              // Actualizar widget cuando hay imágenes
+              if (images.isNotEmpty) {
+                _widgetService.actualizarWidget(images);
+              }
               if (images.isEmpty) {
                 return Center(
                   child: Text(
@@ -47,7 +64,10 @@ class HomePage extends ConsumerWidget {
               }
               return ListView.builder(
                 itemCount: images.length,
-                itemBuilder: (context, index) => ImageCard(imagen: images[index]),
+                itemBuilder: (context, index) => ImageCardWithSender(
+                  imagen: images[index],
+                  currentUserId: user.id,
+                ),
               );
             },
             error: (error, _) => Center(child: Text('Error: $error')),

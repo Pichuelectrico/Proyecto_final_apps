@@ -28,6 +28,8 @@
 	<string>Necesitamos acceso a la camara para tomar fotos y compartirlas con tus amigos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Necesitamos acceso a tu galeria para seleccionar fotos y compartirlas con tus amigos.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Necesitamos acceso a la red local para depurar la aplicacion con Flutter.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

@@ -8,6 +8,9 @@
 .history
 .DS_Store
 GoogleService-Info.plist
+.env
+.env.*
+*.env
 
 
 
