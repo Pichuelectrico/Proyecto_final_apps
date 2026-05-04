@@ -16,6 +16,7 @@ class LoginPage extends ConsumerStatefulWidget {
 class _LoginPageState extends ConsumerState<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isRegister = false;
 
@@ -23,6 +24,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -34,7 +36,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     try {
       if (_isRegister) {
-        await authController.register(email: email, password: password);
+        final name = _nameController.text.trim();
+        await authController.register(
+            email: email, password: password, name: name);
       } else {
         await authController.login(email: email, password: password);
       }
@@ -87,6 +91,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       key: _formKey,
                       child: Column(
                         children: [
+                          if (_isRegister)
+                            TextFormField(
+                              controller: _nameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Nombre',
+                                prefixIcon: Icon(Icons.person_outline),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Ingresa tu nombre';
+                                }
+                                return null;
+                              },
+                            ),
+                          if (_isRegister) const SizedBox(height: 16),
                           TextFormField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,

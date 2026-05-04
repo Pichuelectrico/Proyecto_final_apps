@@ -26,20 +26,35 @@ class ImageRepoImpl implements ImageRepo {
 
   @override
   Future<List<Imagen>> fetchIncomingImages(String userId) async {
-    final snapshot = await firestore.imagesRef
-        .where('receiverId', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
-        .get();
-    return snapshot.docs.map(_mapDoc).toList();
+    try {
+      // Nota: Para usar orderBy, necesitas crear un índice en Firebase Console
+      // Collection: images, Fields: receiverId (Ascending), timestamp (Descending)
+      final snapshot = await firestore.imagesRef
+          .where('receiverId', isEqualTo: userId)
+          .get();
+      final images = snapshot.docs.map(_mapDoc).toList();
+      // Ordenar localmente por timestamp
+      images.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return images;
+    } catch (e) {
+      throw Exception('Error al cargar imágenes: $e');
+    }
   }
 
   @override
   Future<List<Imagen>> fetchOutgoingImages(String userId) async {
-    final snapshot = await firestore.imagesRef
-        .where('senderId', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
-        .get();
-    return snapshot.docs.map(_mapDoc).toList();
+    try {
+      // Nota: Para usar orderBy, necesitas crear un índice en Firebase Console
+      // Collection: images, Fields: senderId (Ascending), timestamp (Descending)
+      final snapshot =
+          await firestore.imagesRef.where('senderId', isEqualTo: userId).get();
+      final images = snapshot.docs.map(_mapDoc).toList();
+      // Ordenar localmente por timestamp
+      images.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return images;
+    } catch (e) {
+      throw Exception('Error al cargar imágenes: $e');
+    }
   }
 
   @override

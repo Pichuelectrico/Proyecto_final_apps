@@ -18,7 +18,7 @@ class FriendSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 88,
+      height: 70,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -29,10 +29,11 @@ class FriendSelector extends StatelessWidget {
             onTap: () => onSelected(friend),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 120,
-              padding: const EdgeInsets.all(12),
+              width: 110,
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isActive ? kSecondaryGreen.withOpacity(0.15) : Colors.white,
+                color:
+                    isActive ? kSecondaryGreen.withOpacity(0.15) : Colors.white,
                 borderRadius: BorderRadius.circular(kCornerRadiusLg),
                 boxShadow: [
                   BoxShadow(
@@ -46,25 +47,39 @@ class FriendSelector extends StatelessWidget {
                   width: 1.2,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   CircleAvatar(
+                    radius: 16,
                     backgroundColor: kPrimaryBlue.withOpacity(0.15),
-                    child: Text(friend.nombre.characters.first.toUpperCase()),
+                    child: Text(
+                      friend.nombre.characters.first.toUpperCase(),
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    friend.nombre,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    friend.email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          friend.nombre,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 12),
+                        ),
+                        Text(
+                          friend.email,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              color: Colors.grey.shade600, fontSize: 10),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
