@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../dominio/repositorios/auth_repo.dart';
@@ -6,11 +7,13 @@ import '../firebase/auth_servicio.dart';
 
 class AuthRepoImpl implements AuthRepo {
   final AuthServicio servicio;
+  final FirebaseFirestore _firestore;
 
-  AuthRepoImpl(this.servicio);
+  AuthRepoImpl(this.servicio, {FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  Usuario _mapUser(User user) {
-    return Usuario(id: user.uid, email: user.email ?? '');
+  Usuario _mapUser(User user, {String? nombre}) {
+    return Usuario(id: user.uid, email: user.email ?? '', nombre: nombre);
   }
 
   @override
@@ -22,15 +25,25 @@ class AuthRepoImpl implements AuthRepo {
   }
 
   @override
-  Future<Usuario> login({required String email, required String password}) async {
+  Future<Usuario> login(
+      {required String email, required String password}) async {
     final user = await servicio.login(email: email, password: password);
     return _mapUser(user);
   }
 
   @override
-  Future<Usuario> register({required String email, required String password}) async {
+  Future<Usuario> register(
+      {required String email, required String password, String? nombre}) async {
     final user = await servicio.register(email: email, password: password);
-    return _mapUser(user);
+
+    // Guardar usuario en Firestore con nombre
+    await _firestore.collection('users').doc(user.uid).set({
+      'email': email,
+      'nombre': nombre ?? '',
+      'avatarUrl': null,
+    });
+
+    return _mapUser(user, nombre: nombre);
   }
 
   @override

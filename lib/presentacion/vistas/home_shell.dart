@@ -5,9 +5,11 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/constants.dart';
 import '../../dominio/casos_uso/cargar_imagen.dart';
 import '../../dominio/casos_uso/validar_imagen.dart';
+import '../../modelos/friend.dart';
 import '../providers/auth_provider.dart';
 import '../providers/friends_provider.dart';
 import '../providers/image_provider.dart';
+import '../widgets/add_friend_sheet.dart';
 import '../widgets/friend_selector.dart';
 import 'gallery_page.dart';
 import 'home_page.dart';
@@ -39,10 +41,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _currentIndex,
-            onDestinationSelected: (index) => setState(() => _currentIndex = index),
+            onDestinationSelected: (index) =>
+                setState(() => _currentIndex = index),
             destinations: const [
               NavigationDestination(icon: Icon(Icons.home), label: 'Feed'),
-              NavigationDestination(icon: Icon(Icons.collections), label: 'Enviadas'),
+              NavigationDestination(
+                  icon: Icon(Icons.collections), label: 'Enviadas'),
               NavigationDestination(icon: Icon(Icons.person), label: 'Perfil'),
             ],
           ),
@@ -53,7 +57,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                   backgroundColor: kSecondaryGreen,
                   icon: const Icon(Icons.group_add),
                   label: const Text('Sin amigos'),
-                  onPressed: () {},
+                  onPressed: () async {
+                    await showModalBottomSheet(
+                      context: context,
+                      showDragHandle: true,
+                      isScrollControlled: true,
+                      builder: (context) {
+                        return AddFriendSheet(userId: user.id);
+                      },
+                    );
+                  },
                 );
               }
               return FloatingActionButton(
@@ -131,7 +144,8 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
                     _errorMessage!,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error),
                   ),
                 ),
               Text(
@@ -142,7 +156,8 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
               FriendSelector(
                 friends: friends,
                 selected: selected,
-                onSelected: (friend) => setState(() => _selectedFriend = friend),
+                onSelected: (friend) =>
+                    setState(() => _selectedFriend = friend),
               ),
               const SizedBox(height: 16),
               Container(
@@ -177,20 +192,23 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
                               : () async {
                                   setState(() => _errorMessage = null);
                                   final picker = ref.read(imagePickerProvider);
-                                  final source = await showModalBottomSheet<ImageSource>(
+                                  final source =
+                                      await showModalBottomSheet<ImageSource>(
                                     context: context,
                                     builder: (context) => SafeArea(
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           ListTile(
-                                            leading: const Icon(Icons.photo_library),
+                                            leading:
+                                                const Icon(Icons.photo_library),
                                             title: const Text('Galeria'),
                                             onTap: () => Navigator.of(context)
                                                 .pop(ImageSource.gallery),
                                           ),
                                           ListTile(
-                                            leading: const Icon(Icons.photo_camera),
+                                            leading:
+                                                const Icon(Icons.photo_camera),
                                             title: const Text('Camara'),
                                             onTap: () => Navigator.of(context)
                                                 .pop(ImageSource.camera),
@@ -205,7 +223,8 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
                                     imageQuality: 85,
                                   );
                                   if (picked == null) return;
-                                  setState(() => _selectedImagePath = picked.path);
+                                  setState(
+                                      () => _selectedImagePath = picked.path);
                                 },
                           icon: const Icon(Icons.photo_library),
                           label: const Text('Seleccionar'),
@@ -236,17 +255,20 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
                                 final selected = _selectedFriend;
                                 final imagePath = _selectedImagePath;
                                 if (selected == null) {
-                                  setState(() => _errorMessage = 'Selecciona un amigo.');
+                                  setState(() =>
+                                      _errorMessage = 'Selecciona un amigo.');
                                   return;
                                 }
                                 if (imagePath == null || imagePath.isEmpty) {
-                                  setState(() => _errorMessage = 'Selecciona una imagen.');
+                                  setState(() =>
+                                      _errorMessage = 'Selecciona una imagen.');
                                   return;
                                 }
                                 final isValid =
                                     await ValidarImagen().ejecutar(imagePath);
                                 if (!isValid) {
-                                  setState(() => _errorMessage = 'Imagen no valida.');
+                                  setState(() =>
+                                      _errorMessage = 'Imagen no valida.');
                                   return;
                                 }
                                 setState(() => _isSubmitting = true);
@@ -257,9 +279,10 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
                                     senderId: widget.userId,
                                     receiverId: selected.id,
                                     localPath: imagePath,
-                                    caption: _captionController.text.trim().isEmpty
-                                        ? null
-                                        : _captionController.text.trim(),
+                                    caption:
+                                        _captionController.text.trim().isEmpty
+                                            ? null
+                                            : _captionController.text.trim(),
                                   );
                                   if (!mounted) return;
                                   Navigator.of(context).pop();
