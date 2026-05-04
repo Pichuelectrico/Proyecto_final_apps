@@ -11,7 +11,7 @@ import SwiftUI
 // Widget simple para iOS 17.0+
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), imageUrl: "", caption: "VibeShare")
+        SimpleEntry(date: Date(), imageUrl: "", caption: "VibeShare", senderName: "Amigo")
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
@@ -26,14 +26,16 @@ struct Provider: TimelineProvider {
     }
     
     func loadWidgetData() -> SimpleEntry {
-        guard let defaults = UserDefaults(suiteName: "group.com.tuapp.vibeshare"),
+        // IMPORTANTE: Este App Group debe coincidir con el de Flutter
+        // Configurarlo en Xcode: Signing & Capabilities → App Groups
+        guard let defaults = UserDefaults(suiteName: "group.com.example.flutterBddFirebaseEjm40"),
               let jsonString = defaults.string(forKey: "latest_images"),
               let data = jsonString.data(using: .utf8),
               let images = try? JSONDecoder().decode([WidgetImage].self, from: data),
               let first = images.first else {
-            return SimpleEntry(date: Date(), imageUrl: "", caption: "Sin vibes aún")
+            return SimpleEntry(date: Date(), imageUrl: "", caption: "Sin vibes aún", senderName: "")
         }
-        return SimpleEntry(date: Date(), imageUrl: first.imageUrl, caption: first.caption)
+        return SimpleEntry(date: Date(), imageUrl: first.imageUrl, caption: first.caption, senderName: first.senderName)
     }
 }
 
@@ -41,6 +43,7 @@ struct WidgetImage: Codable {
     let id: String
     let imageUrl: String
     let senderId: String
+    let senderName: String
     let caption: String
 }
 
@@ -48,32 +51,74 @@ struct SimpleEntry: TimelineEntry {
     let date: Date
     let imageUrl: String
     let caption: String
+    let senderName: String
 }
 
 struct VibeShareWidgetEntryView : View {
     var entry: Provider.Entry
+    @Environment(\.widgetFamily) var family
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(entry.caption)
-                .font(.caption)
-                .lineLimit(2)
+        VStack(alignment: .leading, spacing: 4) {
+            // Header con nombre del remitente
+            if !entry.senderName.isEmpty {
+                HStack {
+                    Image(systemName: "person.circle.fill")
+                        .foregroundColor(.green)
+                    Text(entry.senderName)
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .lineLimit(1)
+                    Spacer()
+                }
                 .padding(.horizontal, 8)
-            
-            if !entry.imageUrl.isEmpty {
-                Text("📸 Imagen recibida")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
-            } else {
-                Text("Toca para ver vibes")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
             }
+            
+            // Mostrar imagen si hay URL
+            if !entry.imageUrl.isEmpty, let url = URL(string: entry.imageUrl) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(maxHeight: family == .systemSmall ? 50 : 80)
+                            .clipped()
+                            .cornerRadius(8)
+                    case .failure(_):
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(maxHeight: family == .systemSmall ? 50 : 80)
+                            .cornerRadius(8)
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .foregroundColor(.gray)
+                            )
+                    case .empty:
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(maxHeight: family == .systemSmall ? 50 : 80)
+                            .cornerRadius(8)
+                            .overlay(
+                                ProgressView()
+                            )
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+                .padding(.horizontal, 4)
+            }
+            
+            // Caption
+            Text(entry.caption)
+                .font(family == .systemSmall ? .caption2 : .caption)
+                .fontWeight(.medium)
+                .lineLimit(family == .systemSmall ? 1 : 2)
+                .padding(.horizontal, 8)
+                .padding(.top, 2)
         }
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.vertical, 4)
     }
 }
 

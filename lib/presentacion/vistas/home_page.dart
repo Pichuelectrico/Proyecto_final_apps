@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,11 +18,30 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   final _widgetService = HomeWidgetServicio();
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _widgetService.inicializar();
+    _startAutoRefresh();
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startAutoRefresh() {
+    // Refrescar cada 40 segundos
+    _refreshTimer = Timer.periodic(const Duration(seconds: 40), (timer) {
+      final user = ref.read(authStateProvider).value;
+      if (user != null) {
+        // Invalidar el provider para forzar recarga
+        ref.invalidate(incomingImagesProvider(user.id));
+      }
+    });
   }
 
   @override
